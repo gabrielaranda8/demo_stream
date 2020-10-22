@@ -1,4 +1,4 @@
-
+#    streamlit run app_name.py --server.port 5998
 from enum import Enum
 from io import BytesIO, StringIO
 from typing import Union
@@ -20,8 +20,8 @@ import time
 
 hora = time.strftime("%y%m%d")
 # Uploader widget
-st.sidebar.title("Upload Your File")
-filename = st.sidebar.file_uploader("Choose a file", type=['xlsx', 'csv'])
+st.sidebar.title("Archivo TSA")
+filename = st.sidebar.file_uploader("Carga tu xlsx de suscri", type=['xlsx'])
 st.sidebar.markdown("---")
 
 
@@ -120,8 +120,8 @@ if __name__ == '__main__':
     
      
 
-        datos=open("suscri_tsa1.txt","w")
-        lista_suscri= []
+        
+        lista_suscri = []
 
         # -----------------PRIMERAS DOS LINEAS OBLIGATORIAS DEL TXT------------------------------------------
         linea1 = "00Aftfaot    20"+hora+"1130560000000"
@@ -170,15 +170,22 @@ if __name__ == '__main__':
         # AGREAGR NUMERO DE FILAS A LA PRIMER LINEA
         lista_suscri[0] = lista_suscri[0]+str(num_lineas)
 
-
+        datos=open("modelo.txt","w")
         datos.writelines(lista_suscri)
         datos.close() 
+        
 
-        nuevo = "suscri_tsa1.txt"
+
+        # st.table(lista_suscri)
+        # otro=open("otrooo.txt","w")
+        # otro.writelines(lista_suscri)
+        # otro.close()
+
+        nuevo = "modelo.txt"
         with open(nuevo, 'rb') as f:
             s = f.read()
 
-        download_button_str = download_button(s, nuevo, f'Click here to download {nuevo}')
+        download_button_str = download_button(s, nuevo, f'Archivo TSA {nuevo}')
         st.markdown(download_button_str, unsafe_allow_html=True)
 
-        os.remove("suscri_tsa1.txt")
+        # os.remove("suscri_tsa1.txt")
