@@ -55,23 +55,6 @@ def download_button(object_to_download, download_filename, button_text, pickle_i
     download_link(your_df, 'YOUR_DF.csv', 'Click to download data!')
     download_link(your_str, 'YOUR_STRING.txt', 'Click to download text!')
     """
-    if pickle_it:
-        try:
-            object_to_download = pickle.dumps(object_to_download)
-        except pickle.PicklingError as e:
-            st.write(e)
-            return None
-
-    else:
-        if isinstance(object_to_download, bytes):
-            pass
-
-        elif isinstance(object_to_download, pd.DataFrame):
-            object_to_download = object_to_download.to_csv(index=False)
-
-        # Try JSON encode for everything else
-        else:
-            object_to_download = json.dumps(object_to_download)
 
     try:
         # some strings <-> bytes conversions necessary here
@@ -107,9 +90,9 @@ def download_button(object_to_download, download_filename, button_text, pickle_i
                 color: white;
                 }}
         </style> """
-
+    print(b64)
     dl_link = custom_css + f'<a download="{download_filename}" id="{button_id}" href="data:file/txt;base64,{b64}">{button_text}</a><br></br>'
-
+    
     return dl_link
 
 
@@ -179,7 +162,12 @@ if __name__ == '__main__':
 
         datos=open("modelo.txt","w")
         datos.writelines(lista_suscri)
-        datos.close() 
+        datos.close()
+
+        # ver = open("modelo.txt")
+        # ver2 = ver.readline()
+        # print(ver2)
+        
         
 
 
@@ -191,6 +179,7 @@ if __name__ == '__main__':
         nuevo = "modelo.txt"
         with open(nuevo, 'rb') as f:
             s = f.read()
+            print(s)
 
         download_button_str = download_button(s, nuevo, f'Archivo TSA {nuevo}')
         st.markdown(download_button_str, unsafe_allow_html=True)
