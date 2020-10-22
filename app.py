@@ -31,6 +31,9 @@ hora = time.strftime("%y%m%d")
 #           use_column_width=False)
 
 st.title("Mini Tablero")
+st.info('\nTablero de automatización, podes preguntarme acá [gabriel aranda]('
+                    'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
+                    ) 
 
 
 # Uploader widget
@@ -47,8 +50,6 @@ st.sidebar.markdown("---")
 
 st.sidebar.title("Conciliación SENEBI")
 st.sidebar.header("Carga el valor del USD, luego ambos XLSX")
-# control_bole = st.sidebar.file_uploader("Carga tu xlsx CONTBOLE", type=['xlsx'])
-# arancel = st.sidebar.file_uploader("Carga tu xlsx ARAXMGER", type=['xlsx'])
 dolar = st.sidebar.text_input("Precio dolar SENEBI", 'dolar')
 st.sidebar.markdown("---")
 
@@ -113,7 +114,7 @@ def download_button(object_to_download, download_filename, button_text, pickle_i
                 color: white;
                 }}
         </style> """
-    print(b64)
+    # print(b64)
     dl_link = custom_css + f'<a download="{download_filename}" id="{button_id}" href="data:file/txt;base64,{b64}">{button_text}</a><br></br>'
     
     return dl_link
@@ -200,7 +201,6 @@ def main():
 
         # os.remove("suscri_tsa1.txt")
     
-
     if esco:
         df = esco.read()
         archivo = df.decode('utf-8')
@@ -215,18 +215,18 @@ def main():
         f = archivo.split(sep=None, maxsplit=-1)
 
         for x in f:
-            print(x)
+            # print(x)
             tipo = x[0]
             if tipo=="S":
                 valid = x[8]
                 if valid!=";":   
-                    linea = x[8:-21]+"\r\n"
+                    linea = x[8:-20]+"\r\n"
                     lista_suscri.append(linea)
                           
             elif tipo=="R":
                 valid = x[8]
                 if valid!=";":
-                    linea2 = x[8:-1]+";"+"\r\n"
+                    linea2 = x[8:]+";"+"\r\n"
                     lista_rescate.append(linea2)
                    
 
@@ -328,3 +328,4 @@ def main():
 
 if __name__ == '__main__':
     main()       
+    
