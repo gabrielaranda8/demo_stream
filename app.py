@@ -5,6 +5,7 @@ from typing import Union
 
 import pandas as pd
 from pandas import read_excel
+from pandas import read_csv
 import streamlit as st
 
 import time
@@ -22,6 +23,12 @@ hora = time.strftime("%y%m%d")
 # Uploader widget
 st.sidebar.title("Archivo TSA")
 filename = st.sidebar.file_uploader("Carga tu xlsx de suscri", type=['xlsx'])
+st.sidebar.markdown("---")
+
+
+
+st.sidebar.title("Archivo ESCO")
+esco = st.sidebar.file_uploader("Carga tu TXT ESCO", type=['txt'])
 st.sidebar.markdown("---")
 
 
@@ -121,11 +128,11 @@ if __name__ == '__main__':
      
 
         
-        lista_suscri = []
+        lista_suscri= []
 
         # -----------------PRIMERAS DOS LINEAS OBLIGATORIAS DEL TXT------------------------------------------
         linea1 = "00Aftfaot    20"+hora+"1130560000000"
-        lista_suscri.append(linea1)
+        lista_suscri.append(linea1)      
 
         incio = "\n"+"0"+hora+"FTFAOT0046"+"\n"
         lista_suscri.append(incio)
@@ -164,7 +171,7 @@ if __name__ == '__main__':
 
         # LINEA FINAL
         num_lineas = len(lista_suscri)-1 # restamos la primera que no cuenta
-        linea_final = "99Aftfaot    20"+hora+"11305600000000"+str(num_lineas)+"\n"
+        linea_final = "99Aftfaot    20"+hora+"1130560000000"+str(num_lineas)+"\n"
         lista_suscri.append(linea_final)
 
         # AGREAGR NUMERO DE FILAS A LA PRIMER LINEA
@@ -189,3 +196,63 @@ if __name__ == '__main__':
         st.markdown(download_button_str, unsafe_allow_html=True)
 
         # os.remove("suscri_tsa1.txt")
+    
+
+    if esco:
+        df = esco.read()
+        archivo = df.decode('utf-8')
+        listo = st.text(archivo)
+
+        suscri = open("suscri.txt", "w") # W puedo editar el archivo, o crea si no esta
+        rescate = open("rescate.txt", "w")
+
+        lista_suscri = []
+        lista_rescate = []
+        
+        f = archivo.split(sep=None, maxsplit=-1)
+
+        for x in f:
+            print(x)
+            tipo = x[0]
+            if tipo=="S":
+                valid = x[8]
+                if valid!=";":   
+                    linea = x[8:-21]+"\n"
+                    lista_suscri.append(linea)
+                          
+            elif tipo=="R":
+                valid = x[8]
+                if valid!=";":
+                    linea2 = x[8:-1]+";"+"\n"
+                    lista_rescate.append(linea2)
+                   
+
+        suscri.writelines(lista_suscri)          
+        rescate.writelines(lista_rescate)          
+        suscri.close()
+        rescate.close()
+        
+
+
+        suscri_file = "suscri.txt"
+        rescate_file = "rescate.txt"
+
+        with open(suscri_file, 'rb') as f:
+            s = f.read()
+
+        download_button_str = download_button(s, suscri_file, f'SUSCRI {suscri_file}')
+        st.markdown(download_button_str, unsafe_allow_html=True)  
+
+        with open(rescate_file, 'rb') as f:
+            s = f.read()
+
+        download_button_str = download_button(s, rescate_file, f'RESCATE {rescate_file}')
+        st.markdown(download_button_str, unsafe_allow_html=True) 
+       
+
+
+# archi1=open("datos.txt","w") 
+# archi1.write("Primer línea.\n") 
+# archi1.write("Segunda línea.\n") 
+# archi1.write("Tercer línea.\n")  
+# archi1.close() 
