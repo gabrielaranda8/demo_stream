@@ -117,7 +117,7 @@ if __name__ == '__main__':
         linea1 = "00Aftfaot    20"+hora+"1130560000000"
         lista_suscri.append(linea1)      
 
-        incio = "\n"+"0"+hora+"FTFAOT0046"+"\n"
+        incio = "\r\n"+"0"+hora+"FTFAOT0046"+"\r\n"
         lista_suscri.append(incio)
 
         # -----------------AGREGAMOS LINEAS SEGUN LA CANTIDAD DE SUCRI QUE TENGAMOS-----------------------------------------
@@ -144,7 +144,7 @@ if __name__ == '__main__':
                 cuotas = str(float(cuotas))
                 
                 ################ AGREGO EL FORMATO A NUESTRO ARCHIVO
-                lista_suscri.append("1'I'E'0046'000000003'"+especie+"       '"+cuotas+"'0046'"+comitente+"'N'00'0000'0000'N"+"\n")
+                lista_suscri.append("1'I'E'0046'000000003'"+especie+"       '"+cuotas+"'0046'"+comitente+"'N'00'0000'0000'N"+"\r\n")
        
 
         # LINEA EJEMPLO
@@ -154,7 +154,7 @@ if __name__ == '__main__':
 
         # LINEA FINAL
         num_lineas = len(lista_suscri)-1 # restamos la primera que no cuenta
-        linea_final = "99Aftfaot    20"+hora+"1130560000000"+str(num_lineas)+"\n"
+        linea_final = "99Aftfaot    20"+hora+"1130560000000"+str(num_lineas)+"\r\n"
         lista_suscri.append(linea_final)
 
         # AGREAGR NUMERO DE FILAS A LA PRIMER LINEA
@@ -206,13 +206,13 @@ if __name__ == '__main__':
             if tipo=="S":
                 valid = x[8]
                 if valid!=";":   
-                    linea = x[8:-21]+"\n"
+                    linea = x[8:-21]+"\r\n"
                     lista_suscri.append(linea)
                           
             elif tipo=="R":
                 valid = x[8]
                 if valid!=";":
-                    linea2 = x[8:-1]+";"+"\n"
+                    linea2 = x[8:-1]+";"+"\r\n"
                     lista_rescate.append(linea2)
                    
 
@@ -241,7 +241,7 @@ if __name__ == '__main__':
 
 
 # archi1=open("datos.txt","w") 
-# archi1.write("Primer línea.\n") 
+# archi1.write("Primer línea.\r\n") 
 # archi1.write("Segunda línea.\n") 
 # archi1.write("Tercer línea.\n")  
 # archi1.close() 
