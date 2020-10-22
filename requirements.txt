@@ -3,3 +3,4 @@ streamlit==0.69.1
 altair==4.1.0
 lxml==4.4.1
 xlrd==1.1.0
+openpyxl==3.0.5
