@@ -5,6 +5,7 @@ from typing import Union
 
 import pandas as pd
 from pandas import read_excel
+from pandas import ExcelWriter
 from pandas import read_csv
 import streamlit as st
 
@@ -18,8 +19,20 @@ import uuid
 import re
 import time
 
+from PIL import Image
+
+
 
 hora = time.strftime("%y%m%d")
+
+# image = Image.open('imagen.png')
+
+# st.image(image,
+#           use_column_width=False)
+
+st.title("Mini Tablero")
+
+
 # Uploader widget
 st.sidebar.title("Archivo TSA")
 filename = st.sidebar.file_uploader("Carga tu xlsx de suscri", type=['xlsx'])
@@ -32,7 +45,17 @@ esco = st.sidebar.file_uploader("Carga tu TXT ESCO", type=['txt'])
 st.sidebar.markdown("---")
 
 
+st.sidebar.title("Conciliación SENEBI")
+st.sidebar.header("Carga el valor del USD, luego ambos XLSX")
+# control_bole = st.sidebar.file_uploader("Carga tu xlsx CONTBOLE", type=['xlsx'])
+# arancel = st.sidebar.file_uploader("Carga tu xlsx ARAXMGER", type=['xlsx'])
+dolar = st.sidebar.text_input("Precio dolar SENEBI", 'dolar')
+st.sidebar.markdown("---")
 
+
+st.sidebar.info('\nEsta app fue creada usando Streamlit y es mantenida por [gabriel aranda]('
+                    'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
+                    ) 
 
 
 
@@ -96,9 +119,8 @@ def download_button(object_to_download, download_filename, button_text, pickle_i
     return dl_link
 
 
+def main():
 
-# print('gggggggggggg')
-if __name__ == '__main__':
     if filename:
         columnas = ['Comitente','CodigoCaja','Cuotas']
         tablero = pd.read_excel(filename, usecols=columnas)
@@ -154,6 +176,9 @@ if __name__ == '__main__':
 
         # LINEA FINAL
         num_lineas = len(lista_suscri)-1 # restamos la primera que no cuenta
+        # print(len(str(num_lineas)))
+        if len(str(num_lineas))==1:
+            num_lineas = "0" + str(num_lineas)
         linea_final = "99Aftfaot    20"+hora+"1130560000000"+str(num_lineas)+"\r\n"
         lista_suscri.append(linea_final)
 
@@ -164,17 +189,6 @@ if __name__ == '__main__':
         datos.writelines(lista_suscri)
         datos.close()
 
-        # ver = open("modelo.txt")
-        # ver2 = ver.readline()
-        # print(ver2)
-        
-        
-
-
-        # st.table(lista_suscri)
-        # otro=open("otrooo.txt","w")
-        # otro.writelines(lista_suscri)
-        # otro.close()
 
         nuevo = "modelo.txt"
         with open(nuevo, 'rb') as f:
@@ -190,7 +204,7 @@ if __name__ == '__main__':
     if esco:
         df = esco.read()
         archivo = df.decode('utf-8')
-        listo = st.text(archivo)
+        # listo = st.text(archivo)
 
         suscri = open("suscri.txt", "w") # W puedo editar el archivo, o crea si no esta
         rescate = open("rescate.txt", "w")
@@ -237,11 +251,80 @@ if __name__ == '__main__':
 
         download_button_str = download_button(s, rescate_file, f'RESCATE {rescate_file}')
         st.markdown(download_button_str, unsafe_allow_html=True) 
-       
+
+    if dolar!='dolar':
+        # if control_bole:
+        #     control_bole = control_bole
+        # if arancel:
+        #     arancel = arancel 
+        control_bole = st.file_uploader("Carga tu xlsx CONTBOLE", type=['xlsx'])
+        arancel = st.file_uploader("Carga tu xlsx ARAXMGER", type=['xlsx'])   
+        ################################################################################################################################
+        columnas = ["'Boleto'","'Operacion'","'Comitente'","'Nombre de la Cuenta'","'Especie'","'Imp_Bruto'","'Valor_Nominal'","'Total_Neto'","'Moneda'","'Precio'"]
+        
+
+        if control_bole and arancel:
+            aranceles = pd.read_excel(arancel,sheet_name='ARAXMGER')
+            control = pd.read_excel(control_bole,sheet_name='Control_de_Boletos', usecols=columnas)
+        ################################################################################################################################
 
 
-# archi1=open("datos.txt","w") 
-# archi1.write("Primer línea.\r\n") 
-# archi1.write("Segunda línea.\n") 
-# archi1.write("Tercer línea.\n")  
-# archi1.close() 
+
+
+            ###### FLITRAMOS POR SOLO OPERACIONES SENEBI ####################
+
+            senebis = ["CSCN","CSNC","CSNP","VSCN","VSNC","VSNP"]
+            datos = []
+            for e in control.values:
+                if e[1] in senebis:
+                    datos.append(e)
+
+            datos = pd.DataFrame(datos, columns=columnas)
+
+            # print(datos)
+
+
+
+            ################  AGREGAMOS LA FILA "INTERES" Y LUEGO SI SON EN DOLARES MULTIPLICAMOS POR EL PRECIO DOLAR ###############3
+
+            datos['interes'] = datos["'Imp_Bruto'"]
+            for valor,moneda in enumerate(datos["'Moneda'"]):
+                # print(moneda)
+                if moneda!="Pesos":
+                    datos['interes'][valor] = float(datos["'Imp_Bruto'"][valor])*float(dolar)
+
+
+
+            ##############  AGREGAMOS LOS ARANCELES X MANAGER QUE SEAN MAYORES A $ 1.0  #########################
+            solo_aranceles = []
+            for valor, arancel in enumerate(aranceles["'SENEBI'"]):
+                if float(arancel) > 1.0:
+                    solo_aranceles.append(aranceles.iloc[valor])
+
+            solo_aranceles = pd.DataFrame(solo_aranceles) 
+            # print(solo_aranceles["'SENEBI'"])      
+
+
+
+
+
+
+            ##################### REORDENAMOS LAS COLUMNAS ##################################
+            datos = datos[["'Boleto'","'Operacion'","'Comitente'","'Nombre de la Cuenta'","'Especie'","'Imp_Bruto'","interes","'Valor_Nominal'","'Moneda'","'Total_Neto'","'Precio'"]]
+
+
+
+            ###########   GUARDAMOS NUEVO EXCEL CON AMBAS SHEETS #######################
+            with ExcelWriter('CONTBOLE_FECHA.xlsx') as writer:
+                datos.to_excel(writer,sheet_name='CONTROL',index=False)
+                solo_aranceles.to_excel(writer,sheet_name='AxM',index=False)  
+            control_file = 'CONTBOLE_FECHA.xlsx'
+            with open(control_file, 'rb') as f:
+                s = f.read()
+
+            download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+            st.markdown(download_button_str, unsafe_allow_html=True)       
+
+
+if __name__ == '__main__':
+    main()       
