@@ -54,6 +54,11 @@ dolar = st.sidebar.text_input("Precio dolar SENEBI", 'dolar')
 st.sidebar.markdown("---")
 
 
+st.sidebar.title("Archivo REINV TSA")
+reinv = st.sidebar.file_uploader("Carga tu xlsx de reinversión", type=['xlsx'])
+st.sidebar.markdown("---")
+
+
 st.sidebar.info('\nEsta app fue creada usando Streamlit y es mantenida por [gabriel aranda]('
                     'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
                     ) 
@@ -201,6 +206,7 @@ def main():
 
         # os.remove("suscri_tsa1.txt")
     
+
     if esco:
         df = esco.read()
         archivo = df.decode('utf-8')
@@ -325,7 +331,89 @@ def main():
             download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
             st.markdown(download_button_str, unsafe_allow_html=True)       
 
+    if reinv:
+        columnas = ['Comitente Número','Moneda','Importe']
+        tablero = pd.read_excel(reinv, usecols=columnas)
+        comit = tablero['Comitente Número']
+        # st.text(comit)
+
+        st.dataframe(tablero)
+        # st.table(tablero)
+    
+     
+
+        
+        lista_reinv= []
+
+        # -----------------PRIMERAS DOS LINEAS OBLIGATORIAS DEL TXT------------------------------------------
+        linea1 = "00Aftfaot    20"+hora+"1130560000000"
+        lista_reinv.append(linea1)      
+
+        incio = "\r\n"+"0"+hora+"FTFAOT0046"+"\r\n"
+        lista_reinv.append(incio)
+
+        # -----------------AGREGAMOS LINEAS SEGUN LA CANTIDAD DE SUCRI QUE TENGAMOS-----------------------------------------
+
+        # especie = 5 digitos 
+        # cuotas = 00000000000.0000000  ( 11 y 7) 
+        # comitente = 9 digitos 
+        especie = 0
+        cuotas = 0
+        comitente = 0
+
+        for valor,comit in enumerate(tablero['Comitente Número']):
+            especie = str(tablero['Moneda'][valor])
+            cuotas = str(tablero['Importe'][valor])
+            comitente = str(comit)  
+            
+            if especie!="nan" and cuotas!="nan" and comitente!="nan":
+
+                #### ESPECIE ###############################################
+                especie = especie
+                #### COMITENTE #############################################
+                comitente = str(int(float(comitente)))
+                #### CUOTAS ################################################
+                cuotas = str(float(cuotas))
+
+                # renta = [["Dolar Renta Local - 10.000","10000"],["Dolar Renta Exterior - 7.000","7000"],["Pesos renta-8000","8000"]]
+                renta = {"Dolar Renta Local - 10.000":"10000","Dolar Renta Exterior - 7.000":"7000","Pesos renta-8000":"8000"}
+
+                if especie in renta:
+                    especie = renta[especie]
+
+                    ################ AGREGO EL FORMATO A NUESTRO ARCHIVO
+                    lista_reinv.append("1'I'E'0046'"+comitente+"'"+especie+"       '"+cuotas+"'0046'03'N'00'0000'0000'N"+"\r\n")
+       
+
+        # LINEA EJEMPLO
+        #"1'I'E'0046'000000003'"+especie+"       '"+cuotas+"'0046'"+comitente+"'N'00'0000'0000'N"
+
+        # ------------------------AGREGAMOS LINEA FINAL---------------------------------------
+
+        # LINEA FINAL
+        num_lineas = len(lista_reinv)-1 # restamos la primera que no cuenta
+        # print(len(str(num_lineas)))
+        if len(str(num_lineas))==1:
+            num_lineas = "0" + str(num_lineas)
+        linea_final = "99Aftfaot    20"+hora+"1130560000000"+str(num_lineas)+"\r\n"
+        lista_reinv.append(linea_final)
+
+        # AGREAGR NUMERO DE FILAS A LA PRIMER LINEA
+        lista_reinv[0] = lista_reinv[0]+str(num_lineas)
+
+        datos=open("modelo_reinv.txt","w")
+        datos.writelines(lista_reinv)
+        datos.close()
+
+
+        nuevo = "modelo_reinv.txt"
+        with open(nuevo, 'rb') as f:
+            s = f.read()
+            print(s)
+
+        download_button_str = download_button(s, nuevo, f'Archivo REINV TSA {nuevo}')
+        st.markdown(download_button_str, unsafe_allow_html=True)
+
 
 if __name__ == '__main__':
     main()       
-    
