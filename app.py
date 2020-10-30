@@ -376,7 +376,7 @@ def main():
                 cuotas = str(float(cuotas))
 
                 # renta = [["Dolar Renta Local - 10.000","10000"],["Dolar Renta Exterior - 7.000","7000"],["Pesos renta-8000","8000"]]
-                renta = {"Dolar Renta Local - 10.000":"10000","Dolar Renta Exterior - 7.000":"7000","Pesos renta-8000":"8000"}
+                renta = {"Dolar Renta Local - 10.000":"10000","Dolar Renta Exterior - 7.000":"7000","Pesos Renta - 8.000":"8000"}
 
                 if especie in renta:
                     especie = renta[especie]
