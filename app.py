@@ -40,6 +40,48 @@ st.info('\nTablero de automatización, podes preguntarme acá [gabriel aranda]('
 st.sidebar.title("Archivo TSA")
 filename = st.sidebar.file_uploader("Carga tu xlsx de suscri", type=['xlsx'])
 st.sidebar.markdown("---")
+#    streamlit run app_name.py --server.port 5998
+from enum import Enum
+from io import BytesIO, StringIO
+from typing import Union
+
+import pandas as pd
+from pandas import read_excel
+from pandas import ExcelWriter
+from pandas import read_csv
+import streamlit as st
+
+import time
+import sys
+import base64
+import uuid
+import os
+import pickle
+import uuid
+import re
+import time
+
+from PIL import Image
+
+
+
+hora = time.strftime("%y%m%d")
+
+# image = Image.open('imagen.png')
+
+# st.image(image,
+#           use_column_width=False)
+
+st.title("Mini Tablero")
+st.info('\nTablero de automatización, podes preguntarme acá [gabriel aranda]('
+                    'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
+                    ) 
+
+
+# Uploader widget
+st.sidebar.title("Archivo TSA")
+filename = st.sidebar.file_uploader("Carga tu xlsx de suscri", type=['xlsx'])
+st.sidebar.markdown("---")
 
 
 
@@ -59,9 +101,12 @@ reinv = st.sidebar.file_uploader("Carga tu xlsx de reinversión", type=['xlsx'])
 st.sidebar.markdown("---")
 
 
-st.sidebar.info('\nEsta app fue creada usando Streamlit y es mantenida por [gabriel aranda]('
-                    'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
-                    ) 
+# st.sidebar.title("Archivo COMIS")
+# cometas = st.sidebar.file_uploader("Carga tu xlsx de Comisiónes", type=['xlsx'])
+# st.sidebar.markdown("---")
+
+
+
 
 
 
@@ -413,7 +458,30 @@ def main():
 
         download_button_str = download_button(s, nuevo, f'Archivo REINV TSA {nuevo}')
         st.markdown(download_button_str, unsafe_allow_html=True)
+    
+    st.sidebar.title("Archivo COMIS")
+    cometas = st.sidebar.file_uploader("Carga tu xlsx de Comisiónes", type=['xlsx'])
+    st.sidebar.markdown("---")
+    if cometas:
+        cometas = pd.read_excel(cometas)
+
+        cometas.columns = ["FechaConcertacion","FechaVencimiento","NO1","OperacionTipo","ComitenteNumero","ComitenteDescripcion","Cantidad","PorcentajeArancel","NO3","NO4","Ticker","Denominacion"]
+
+        cometas = cometas.drop([0],axis=0)
+        cometas = cometas.drop(['NO1', 'NO3', 'NO4'], axis=1)
+
+        cometas = cometas.drop_duplicates(['FechaConcertacion','FechaVencimiento','ComitenteNumero', 'PorcentajeArancel', 'Ticker',"OperacionTipo"], keep='last')
+
+        nuevo = "NUEVO_COMIS.xlsx"
+        with open(nuevo, 'rb') as f:
+            s = f.read()
+
+        download_button_str = download_button(s, nuevo, f'Archivo COMIS LISTAS {nuevo}')
+        st.markdown(download_button_str, unsafe_allow_html=True)
 
 
+    st.sidebar.info('\nEsta app fue creada usando Streamlit y es mantenida por [gabriel aranda]('
+                    'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
+                    ) 
 if __name__ == '__main__':
-    main()       
+    main()      
