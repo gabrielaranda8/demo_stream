@@ -40,48 +40,6 @@ st.info('\nTablero de automatización, podes preguntarme acá [gabriel aranda]('
 st.sidebar.title("Archivo TSA")
 filename = st.sidebar.file_uploader("Carga tu xlsx de suscri", type=['xlsx'])
 st.sidebar.markdown("---")
-#    streamlit run app_name.py --server.port 5998
-from enum import Enum
-from io import BytesIO, StringIO
-from typing import Union
-
-import pandas as pd
-from pandas import read_excel
-from pandas import ExcelWriter
-from pandas import read_csv
-import streamlit as st
-
-import time
-import sys
-import base64
-import uuid
-import os
-import pickle
-import uuid
-import re
-import time
-
-from PIL import Image
-
-
-
-hora = time.strftime("%y%m%d")
-
-# image = Image.open('imagen.png')
-
-# st.image(image,
-#           use_column_width=False)
-
-st.title("Mini Tablero")
-st.info('\nTablero de automatización, podes preguntarme acá [gabriel aranda]('
-                    'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
-                    ) 
-
-
-# Uploader widget
-st.sidebar.title("Archivo TSA")
-filename = st.sidebar.file_uploader("Carga tu xlsx de suscri", type=['xlsx'])
-st.sidebar.markdown("---")
 
 
 
@@ -104,10 +62,6 @@ st.sidebar.markdown("---")
 # st.sidebar.title("Archivo COMIS")
 # cometas = st.sidebar.file_uploader("Carga tu xlsx de Comisiónes", type=['xlsx'])
 # st.sidebar.markdown("---")
-
-
-
-
 
 
 def download_button(object_to_download, download_filename, button_text, pickle_it=False):
