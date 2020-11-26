@@ -426,6 +426,8 @@ def main():
 
         cometas = cometas.drop_duplicates(['FechaConcertacion','FechaVencimiento','ComitenteNumero', 'PorcentajeArancel', 'Ticker',"OperacionTipo"], keep='last')
 
+        with ExcelWriter('NUEVO_COMIS.xlsx') as writer:
+                cometas.to_excel(writer,sheet_name='COMIS',index=False) 
         nuevo = "NUEVO_COMIS.xlsx"
         with open(nuevo, 'rb') as f:
             s = f.read()
