@@ -8,6 +8,7 @@ from pandas import read_excel
 from pandas import ExcelWriter
 from pandas import read_csv
 import streamlit as st
+import openpyxl
 
 import time
 import sys
@@ -47,8 +48,12 @@ st.sidebar.title("Archivo ESCO")
 esco = st.sidebar.file_uploader("Carga tu TXT ESCO", type=['txt'])
 st.sidebar.markdown("---")
 
+st.sidebar.title("Conciliación SENEBI BO")
+st.sidebar.header("Carga el valor del USD, luego ambos XLSX de BO")
+dolar_bo = st.sidebar.text_input("Precio dolar SENEBI BO", 'dolar')
+st.sidebar.markdown("---")
 
-st.sidebar.title("Conciliación SENEBI")
+st.sidebar.title("Conciliación SENEBI gallo")
 st.sidebar.header("Carga el valor del USD, luego ambos XLSX")
 dolar = st.sidebar.text_input("Precio dolar SENEBI", 'dolar')
 st.sidebar.markdown("---")
@@ -436,8 +441,99 @@ def main():
         st.markdown(download_button_str, unsafe_allow_html=True)
 
 
+    if dolar_bo!='dolar':
+        # if control_boletos:
+        #     control_bole = control_bole
+        # if arancel:
+        #     arancel = arancel 
+        control_boletos = st.file_uploader("Carga tu xlsx BOLETOS", type=['xlsx'])
+        arancel = st.file_uploader("Carga tu xlsx ARANCELES", type=['xlsx'])   
+        ################################################################################################################################
+        columnas = ["Tipo de Operación","Número de Boleto","Comitente - Número","Fecha de concertación","Instrumento - Símbolo","Cantidad","Moneda","Bruto"]
+        
+
+        if control_boletos and arancel:
+            aranceles = pd.read_excel(arancel, engine='openpyxl')
+            control = pd.read_excel(control_boletos, engine='openpyxl', usecols=columnas)
+        ################################################################################################################################
+
+
+
+
+            ###### FLITRAMOS POR SOLO OPERACIONES SENEBI ####################
+
+            # senebis = ["Compra SENEBI","Compra SENEBI Colega Pesos","Compra SENEBI CP  Letras","Compra SENEBI CP ON","Compra SENEBI Dólar Cable CP Letras",
+            #            "Compra SENEBI Dolar MEP","Venta SENEBI","Venta SENEBI Cable","Venta SENEBI Colega Pesos","Venta Senebi CP Letras","Venta SENEBI Letras Dolar MEP CP",
+            #            "Venta Senebi Pesos ON CP"]
+            datos = []
+            for e in control.values:
+                if "SENEBI" in e[0]:
+                    if "Compra" in e[0]:
+                        e[7] = 0 - e[7]
+                    datos.append(e)
+                elif "Senebi" in e[0]:
+                    if "Compra" in e[0]:
+                        e[7] = 0 - e[7]
+                    datos.append(e)    
+
+            datos = pd.DataFrame(datos, columns=columnas)
+
+
+                
+
+            # print(datos)
+
+
+
+            ################  AGREGAMOS LA FILA "INTERES" Y LUEGO SI SON EN DOLARES MULTIPLICAMOS POR EL PRECIO DOLAR ###############3
+
+            datos['interes'] = datos["Bruto"]
+            for valor,moneda in enumerate(datos["Moneda"]):
+                # print(moneda)
+                if moneda!="$":
+                    datos['interes'][valor] = float(datos["Bruto"][valor])*float(dolar_bo)
+
+            # for e in datos.values:
+            #     if "Compra" in e[0]:
+            #         e[8] = 0 - e[8]        
+
+
+
+            ##############  AGREGAMOS LOS ARANCELES X MANAGER SENEBI #########################
+            solo_aranceles = []
+            for e in aranceles.values:
+                if "SENEBI" in e[9]:
+                    # print(e)
+                    solo_aranceles.append(e)
+
+            datos_aranceles = pd.DataFrame(solo_aranceles, columns=aranceles.columns)
+            # print(solo_aranceles["'SENEBI'"])      
+
+
+
+
+
+
+            ##################### REORDENAMOS LAS COLUMNAS ##################################
+            # datos = datos[["'Boleto'","'Operacion'","'Comitente'","'Nombre de la Cuenta'","'Especie'","'Imp_Bruto'","interes","'Valor_Nominal'","'Moneda'","'Total_Neto'","'Precio'"]]
+
+
+
+            ###########   GUARDAMOS NUEVO EXCEL CON AMBAS SHEETS #######################
+            with ExcelWriter('control_senebi_fecha.xlsx') as writer:
+                datos.to_excel(writer,sheet_name='CONTROL',index=False)
+                datos_aranceles.to_excel(writer,sheet_name='AxM',index=False)  
+            control_file = 'control_senebi_fecha.xlsx'
+            with open(control_file, 'rb') as f:
+                s = f.read()
+
+            download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+            st.markdown(download_button_str, unsafe_allow_html=True)  
+
     st.sidebar.info('\nEsta app fue creada usando Streamlit y es mantenida por [gabriel aranda]('
                     'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
                     ) 
+
+
 if __name__ == '__main__':
     main()      
