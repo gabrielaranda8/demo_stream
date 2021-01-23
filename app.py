@@ -53,20 +53,9 @@ st.sidebar.header("Carga el valor del USD, luego ambos XLSX de BO")
 dolar_bo = st.sidebar.text_input("Precio dolar SENEBI BO", 'dolar')
 st.sidebar.markdown("---")
 
-st.sidebar.title("Conciliación SENEBI gallo")
-st.sidebar.header("Carga el valor del USD, luego ambos XLSX")
-dolar = st.sidebar.text_input("Precio dolar SENEBI", 'dolar')
-st.sidebar.markdown("---")
-
-
 st.sidebar.title("Archivo REINV TSA")
 reinv = st.sidebar.file_uploader("Carga tu xlsx de reinversión", type=['xlsx'])
 st.sidebar.markdown("---")
-
-
-# st.sidebar.title("Archivo COMIS")
-# cometas = st.sidebar.file_uploader("Carga tu xlsx de Comisiónes", type=['xlsx'])
-# st.sidebar.markdown("---")
 
 
 def download_button(object_to_download, download_filename, button_text, pickle_it=False):
@@ -260,80 +249,7 @@ def main():
             s = f.read()
 
         download_button_str = download_button(s, rescate_file, f'RESCATE {rescate_file}')
-        st.markdown(download_button_str, unsafe_allow_html=True) 
-
-    if dolar!='dolar':
-        # if control_bole:
-        #     control_bole = control_bole
-        # if arancel:
-        #     arancel = arancel 
-        control_bole = st.file_uploader("Carga tu xlsx CONTBOLE", type=['xlsx'])
-        arancel = st.file_uploader("Carga tu xlsx ARAXMGER", type=['xlsx'])   
-        ################################################################################################################################
-        columnas = ["'Boleto'","'Operacion'","'Comitente'","'Nombre de la Cuenta'","'Especie'","'Imp_Bruto'","'Valor_Nominal'","'Total_Neto'","'Moneda'","'Precio'"]
-        
-
-        if control_bole and arancel:
-            aranceles = pd.read_excel(arancel,sheet_name='ARAXMGER')
-            control = pd.read_excel(control_bole,sheet_name='Control_de_Boletos', usecols=columnas)
-        ################################################################################################################################
-
-
-
-
-            ###### FLITRAMOS POR SOLO OPERACIONES SENEBI ####################
-
-            senebis = ["CSCN","CSNC","CSNP","VSCN","VSNC","VSNP"]
-            datos = []
-            for e in control.values:
-                if e[1] in senebis:
-                    datos.append(e)
-
-            datos = pd.DataFrame(datos, columns=columnas)
-
-            # print(datos)
-
-
-
-            ################  AGREGAMOS LA FILA "INTERES" Y LUEGO SI SON EN DOLARES MULTIPLICAMOS POR EL PRECIO DOLAR ###############3
-
-            datos['interes'] = datos["'Imp_Bruto'"]
-            for valor,moneda in enumerate(datos["'Moneda'"]):
-                # print(moneda)
-                if moneda!="Pesos":
-                    datos['interes'][valor] = float(datos["'Imp_Bruto'"][valor])*float(dolar)
-
-
-
-            ##############  AGREGAMOS LOS ARANCELES X MANAGER QUE SEAN MAYORES A $ 1.0  #########################
-            solo_aranceles = []
-            for valor, arancel in enumerate(aranceles["'SENEBI'"]):
-                if float(arancel) > 1.0:
-                    solo_aranceles.append(aranceles.iloc[valor])
-
-            solo_aranceles = pd.DataFrame(solo_aranceles) 
-            # print(solo_aranceles["'SENEBI'"])      
-
-
-
-
-
-
-            ##################### REORDENAMOS LAS COLUMNAS ##################################
-            datos = datos[["'Boleto'","'Operacion'","'Comitente'","'Nombre de la Cuenta'","'Especie'","'Imp_Bruto'","interes","'Valor_Nominal'","'Moneda'","'Total_Neto'","'Precio'"]]
-
-
-
-            ###########   GUARDAMOS NUEVO EXCEL CON AMBAS SHEETS #######################
-            with ExcelWriter('CONTBOLE_FECHA.xlsx') as writer:
-                datos.to_excel(writer,sheet_name='CONTROL',index=False)
-                solo_aranceles.to_excel(writer,sheet_name='AxM',index=False)  
-            control_file = 'CONTBOLE_FECHA.xlsx'
-            with open(control_file, 'rb') as f:
-                s = f.read()
-
-            download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
-            st.markdown(download_button_str, unsafe_allow_html=True)       
+        st.markdown(download_button_str, unsafe_allow_html=True)     
 
     if reinv:
         columnas = ['Comitente Número','Moneda','Importe']
@@ -418,29 +334,6 @@ def main():
         download_button_str = download_button(s, nuevo, f'Archivo REINV TSA {nuevo}')
         st.markdown(download_button_str, unsafe_allow_html=True)
     
-    st.sidebar.title("Archivo COMIS")
-    cometas = st.sidebar.file_uploader("Carga tu xlsx de Comisiónes", type=['xlsx'])
-    st.sidebar.markdown("---")
-    if cometas:
-        cometas = pd.read_excel(cometas)
-
-        cometas.columns = ["FechaConcertacion","FechaVencimiento","NO1","OperacionTipo","ComitenteNumero","ComitenteDescripcion","Cantidad","PorcentajeArancel","NO3","NO4","Ticker","Denominacion"]
-
-        cometas = cometas.drop([0],axis=0)
-        cometas = cometas.drop(['NO1', 'NO3', 'NO4'], axis=1)
-
-        cometas = cometas.drop_duplicates(['FechaConcertacion','FechaVencimiento','ComitenteNumero', 'PorcentajeArancel', 'Ticker',"OperacionTipo"], keep='last')
-
-        with ExcelWriter('NUEVO_COMIS.xlsx') as writer:
-                cometas.to_excel(writer,sheet_name='COMIS',index=False) 
-        nuevo = "NUEVO_COMIS.xlsx"
-        with open(nuevo, 'rb') as f:
-            s = f.read()
-
-        download_button_str = download_button(s, nuevo, f'Archivo COMIS LISTAS {nuevo}')
-        st.markdown(download_button_str, unsafe_allow_html=True)
-
-
     if dolar_bo!='dolar':
         # if control_boletos:
         #     control_bole = control_bole
