@@ -398,6 +398,8 @@ def main():
                 if "SENEBI" in e[9]:
                     # print(e)
                     solo_aranceles.append(e)
+                elif "Senebi" in e[9]:
+                    solo_aranceles.append(e)  
 
             datos_aranceles = pd.DataFrame(solo_aranceles, columns=aranceles.columns)
             # print(solo_aranceles["'SENEBI'"])      
