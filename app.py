@@ -57,6 +57,17 @@ st.sidebar.title("Archivo REINV TSA")
 reinv = st.sidebar.file_uploader("Carga tu xlsx de reinversión", type=['xlsx'])
 st.sidebar.markdown("---")
 
+# st.sidebar.title("Tenencias ACDI para CNV")
+# CNV = st.sidebar.file_uploader("Carga tu xlsx del mes a controlar", type=['xlsx'])
+# st.sidebar.markdown("---")
+
+st.sidebar.title("solo TEST para CNV")
+TEST = st.sidebar.file_uploader("Carga tu xlsx del mes a controlar TEST", type=['xlsx'])
+st.sidebar.markdown("---")
+
+st.sidebar.title("Conci ESCO vs BO")
+bo = st.sidebar.file_uploader("Carga tu xlsx de FONDOS COHEN de BO !!!!", type=['xlsx'])
+st.sidebar.markdown("---")
 
 def download_button(object_to_download, download_filename, button_text, pickle_it=False):
     """
@@ -428,6 +439,264 @@ def main():
     st.sidebar.info('\nEsta app fue creada usando Streamlit y es mantenida por [gabriel aranda]('
                     'https://www.linkedin.com/in/gabriel-alejandro-aranda-02714a151/).\n\n'
                     ) 
+
+    
+    if TEST:
+        test_fondos = pd.read_excel(TEST, engine='openpyxl')
+
+        coor = st.file_uploader("Carga tu xlsx COORPORATIVO", type=['xls'])
+        pymes = st.file_uploader("Carga tu xlsx PYME", type=['xls'])
+
+        if coor and pymes:
+
+            coor = pd.read_excel(coor)
+            pymes = pd.read_excel(pymes)
+
+            # test_fondos['TIPO'] = test_fondos['Custodia']
+            tipo = []
+            # print(coor['Código de Interfaz'])
+            st.dataframe(coor['Código de Interfaz'])
+
+            for contador, e in enumerate(test_fondos['Cuenta - Nro']):
+                print(e)
+
+
+                if e in coor['Código de Interfaz'].values:
+                    tipo.append("COORPORATIVO")
+
+                elif e in pymes['Código de Interfaz'].values:
+                    tipo.append("PYMES")
+
+                else:
+                    tipo.append("NADA")
+
+            test_fondos['TIPO'] = tipo
+            st.dataframe(test_fondos)
+            ###########   GUARDAMOS NUEVO EXCEL CON AMBAS SHEETS #######################
+            with ExcelWriter('DATOS_CNV.xlsx') as writer:
+                test_fondos.to_excel(writer,index=False) 
+            control_file = 'DATOS_CNV.xlsx'
+            with open(control_file, 'rb') as f:
+                s = f.read()
+
+            download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+            st.markdown(download_button_str, unsafe_allow_html=True)                 
+
+    if bo:
+
+        columnas = ['Comitente - Descripción','Instrumento - Símbolo','Instrumento - Denominación','Cuenta - Nro','Saldo Total']
+        archivo_bo = pd.read_excel(bo, usecols=columnas, engine='openpyxl')
+        archivo_esco_plus = st.file_uploader("Carga tu xlsx de PLUS de ESCO !!!!!!", type=['xls'])
+        archivo_esco_crf = st.file_uploader("Carga tu xlsx de CRF de ESCO !!!!!!", type=['xls'])
+
+
+        def conciliarEsco(archivo_bo,archivo_esco):
+            archivo_esco = archivo_esco
+            archivo_bo = archivo_bo
+            
+            conci_LISTA_esco = {'NOMBRE':[],'COMITENTE':[],'CP QUE FALTAN EN BO':[]}
+            
+            for comitente in archivo_esco.index:
+
+                esco_cp = archivo_esco.loc[comitente]
+                esco_nombre = esco_cp['Nombre']
+                esco_cp = esco_cp['Cuotapartes']
+
+                if esco_cp > 0:
+                    
+                    if comitente in archivo_bo.index:
+
+                        bo_cp = archivo_bo.loc[comitente]
+                        bo_cp = bo_cp['Saldo Total']
+
+                        if esco_cp == bo_cp:
+
+                            conci_LISTA_esco['COMITENTE'].append(comitente)
+                            conci_LISTA_esco['NOMBRE'].append(esco_nombre)
+                            conci_LISTA_esco['CP QUE FALTAN EN BO'].append('COINCIDE EXACTO')
+                        
+                        else:
+                            dif = esco_cp - bo_cp
+                            conci_LISTA_esco['COMITENTE'].append(comitente)
+                            conci_LISTA_esco['NOMBRE'].append(esco_nombre)
+                            conci_LISTA_esco['CP QUE FALTAN EN BO'].append(dif)
+                        
+                    else: 
+                        conci_LISTA_esco['COMITENTE'].append(comitente)
+                        conci_LISTA_esco['NOMBRE'].append(esco_nombre)
+                        conci_LISTA_esco['CP QUE FALTAN EN BO'].append('NO ESTÁ EL COMIT EN BO')
+
+            return conci_LISTA_esco            
+
+        def conciliarBO(archivo_bo,archivo_esco):
+            
+            archivo_esco = archivo_esco
+            archivo_bo = archivo_bo
+
+            conci_LISTA_bo = {'NOMBRE':[],'COMITENTE':[],'CP QUE FALTAN EN BO':[]}
+
+            for comitente in archivo_bo.index:
+
+                bo_cp = archivo_bo.loc[comitente]
+                bo_nombre = bo_cp['Comitente - Descripción']
+                bo_cp = bo_cp['Saldo Total']
+
+                if bo_cp > 0:
+                    
+                    if comitente in archivo_esco.index:
+
+                        esco_cp = archivo_esco.loc[comitente]
+                        esco_cp = esco_cp['Cuotapartes']
+
+                        if bo_cp == esco_cp:
+
+                            conci_LISTA_bo['COMITENTE'].append(comitente)
+                            conci_LISTA_bo['NOMBRE'].append(bo_nombre)
+                            conci_LISTA_bo['CP QUE FALTAN EN BO'].append('COINCIDE EXACTO')
+                        else:
+                            dif = bo_cp - esco_cp
+                            conci_LISTA_bo['COMITENTE'].append(comitente)
+                            conci_LISTA_bo['NOMBRE'].append(bo_nombre)
+                            conci_LISTA_bo['CP QUE FALTAN EN BO'].append(dif)
+                        
+                    else: 
+                        conci_LISTA_bo['COMITENTE'].append(comitente)
+                        conci_LISTA_bo['NOMBRE'].append(bo_nombre)
+                        conci_LISTA_bo['CP QUE FALTAN EN BO'].append('NO ESTÁ EL COMIT EN ESCO')
+
+            return conci_LISTA_bo     
+
+        if archivo_esco_plus:
+            
+            ######### Descarto las columnas que no me sirven y dejo limpio el excel ##########
+            archivo_esco_plus = pd.read_excel(archivo_esco_plus)
+            archivo_esco_plus.set_axis(['0', 'Clase', 'Número','Nombre','4','5','Cuotapartes'], 
+                    axis='columns', inplace=True)
+            nuevo = archivo_esco_plus.drop([0,1,2,3],axis=0)
+            # data.loc[1,2[columna,columna]]
+            
+
+            ########### PRIMERO FILTRAMOS POR LOS PLUS A #######################
+            plus_a = nuevo['Clase'] == 'CLASE A - PESOS'
+            plusa = nuevo[plus_a].set_index('Número')
+           
+            plusbo = archivo_bo['Instrumento - Símbolo'] == 'PLUS'
+            plus_BO = archivo_bo[plusbo].set_index('Cuenta - Nro') 
+
+            archivo_plusA_esco = conciliarEsco(plus_BO,plusa)
+            archivo_plusA_bo = conciliarBO(plus_BO,plusa)
+            
+           
+            ################ HACEMOS LA CONCI CREANDO UN NUEVO DATAFRAME ##############  
+
+            ########### LUEGO FILTRAMOS POR LOS PLUS B #######################
+            plus_B = nuevo['Clase'] == 'CLASE B - PESOS'
+            plusB = nuevo[plus_B].set_index('Número')
+
+            plusBbo = archivo_bo['Instrumento - Símbolo'] == 'PLUSB'
+            plusB_BO = archivo_bo[plusBbo].set_index('Cuenta - Nro')
+            
+            archivo_plusB_esco = conciliarEsco(plusB_BO,plusB)
+            archivo_plusB_bo = conciliarBO(plusB_BO,plusB)
+
+            
+            conci_lista_plusa_esco = pd.DataFrame(archivo_plusA_esco)
+            conci_lista_plusa_bo = pd.DataFrame(archivo_plusA_bo)
+            conci_lista_plusB_esco = pd.DataFrame(archivo_plusB_esco)
+            conci_lista_plusB_bo = pd.DataFrame(archivo_plusB_bo)
+
+            with ExcelWriter('CONCI_PLUS_COHEN.xlsx') as writer:
+                conci_lista_plusa_esco.to_excel(writer,sheet_name='PLUSA_ESCO',index=False)
+                conci_lista_plusa_bo.to_excel(writer,sheet_name='PLUSA_BO',index=False)  
+                conci_lista_plusB_esco.to_excel(writer,sheet_name='PLUSB_ESCO',index=False)  
+                conci_lista_plusB_bo.to_excel(writer,sheet_name='PLUSB_BO',index=False)  
+            
+            control_file = 'CONCI_PLUS_COHEN.xlsx'
+            with open(control_file, 'rb') as f:
+                s = f.read()
+
+            download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+            st.markdown(download_button_str, unsafe_allow_html=True)  
+
+        if archivo_esco_crf:
+            
+            ######### Descarto las columnas que no me sirven y dejo limpio el excel ##########
+            archivo_esco_crf = pd.read_excel(archivo_esco_crf)
+            archivo_esco_crf.set_axis(['0', 'Clase', 'Número','Nombre','4','5','Cuotapartes'], 
+                    axis='columns', inplace=True)
+            nuevo = archivo_esco_crf.drop([0,1,2,3],axis=0)
+            # data.loc[1,2[columna,columna]]
+            
+
+            ########### PRIMERO FILTRAMOS POR LOS CRF A #######################
+            crf_a = nuevo['Clase'] == 'CLASE A - PESOS'
+            crfa = nuevo[crf_a].set_index('Número')
+           
+            crfbo = archivo_bo['Instrumento - Símbolo'] == 'CRF'
+            crf_BO = archivo_bo[crfbo].set_index('Cuenta - Nro') 
+
+            archivo_crfA_esco = conciliarEsco(crf_BO,crfa)
+            archivo_crfA_bo = conciliarBO(crf_BO,crfa)
+
+            ########### LUEGO FILTRAMOS POR LOS CRF B #######################
+            crf_B = nuevo['Clase'] == 'CLASE B - PESOS'
+            CRFB = nuevo[crf_B].set_index('Número')
+
+            crfBbo = archivo_bo['Instrumento - Símbolo'] == 'CRFB'
+            crfB_BO = archivo_bo[crfBbo].set_index('Cuenta - Nro')
+            
+            archivo_crfB_esco = conciliarEsco(crfB_BO,CRFB)
+            archivo_crfB_bo = conciliarBO(crfB_BO,CRFB)
+
+            ########### LUEGO FILTRAMOS POR LOS CRF C #######################
+            crf_C = nuevo['Clase'] == 'CLASE C - PESOS'
+            CRFC = nuevo[crf_C].set_index('Número')
+
+            crfCbo = archivo_bo['Instrumento - Símbolo'] == 'CRFC'
+            crfC_BO = archivo_bo[crfCbo].set_index('Cuenta - Nro')
+            
+            archivo_crfC_esco = conciliarEsco(crfC_BO,CRFC)
+            archivo_crfC_bo = conciliarBO(crfC_BO,CRFC)
+
+            ########### LUEGO FILTRAMOS POR LOS CRF D #######################
+            crf_D = nuevo['Clase'] == 'CLASE D - PESOS'
+            CRFD = nuevo[crf_D].set_index('Número')
+
+            crfDbo = archivo_bo['Instrumento - Símbolo'] == 'CRFD'
+            crfD_BO = archivo_bo[crfDbo].set_index('Cuenta - Nro')
+            
+            archivo_crfD_esco = conciliarEsco(crfD_BO,CRFD)
+            archivo_crfD_bo = conciliarBO(crfD_BO,CRFD)
+
+            
+            conci_lista_crfa_esco = pd.DataFrame(archivo_crfA_esco)
+            conci_lista_crfa_bo = pd.DataFrame(archivo_crfA_bo)
+            conci_lista_crfB_esco = pd.DataFrame(archivo_crfB_esco)
+            conci_lista_crfB_bo = pd.DataFrame(archivo_crfB_bo)
+            conci_lista_crfC_esco = pd.DataFrame(archivo_crfC_esco)
+            conci_lista_crfC_bo = pd.DataFrame(archivo_crfC_bo)
+            conci_lista_crfD_esco = pd.DataFrame(archivo_crfD_esco)
+            conci_lista_crfD_bo = pd.DataFrame(archivo_crfD_bo)
+
+            with ExcelWriter('CONCI_CRF_COHEN.xlsx') as writer:
+                conci_lista_crfa_esco.to_excel(writer,sheet_name='CRFA_ESCO',index=False)
+                conci_lista_crfa_bo.to_excel(writer,sheet_name='CRFA_BO',index=False)  
+                conci_lista_crfB_esco.to_excel(writer,sheet_name='CRFB_ESCO',index=False)  
+                conci_lista_crfB_bo.to_excel(writer,sheet_name='CRFB_BO',index=False)  
+                conci_lista_crfC_esco.to_excel(writer,sheet_name='CRFC_ESCO',index=False)  
+                conci_lista_crfC_bo.to_excel(writer,sheet_name='CRFC_BO',index=False)  
+                conci_lista_crfD_esco.to_excel(writer,sheet_name='CRFD_ESCO',index=False)  
+                conci_lista_crfD_bo.to_excel(writer,sheet_name='CRFD_BO',index=False)  
+            
+            control_file = 'CONCI_CRF_COHEN.xlsx'
+            with open(control_file, 'rb') as f:
+                s = f.read()
+
+            download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+            st.markdown(download_button_str, unsafe_allow_html=True)      
+                        
+
+
 
 
 if __name__ == '__main__':
