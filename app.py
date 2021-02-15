@@ -2,6 +2,7 @@
 from enum import Enum
 from io import BytesIO, StringIO
 from typing import Union
+from datetime import datetime
 
 import pandas as pd
 from pandas import read_excel
@@ -264,13 +265,122 @@ def main():
 
     if reinv:
         columnas = ['Comitente Número','Moneda','Importe']
-        tablero = pd.read_excel(reinv, usecols=columnas)
+        tablero = pd.read_excel(reinv, usecols=columnas, engine='openpyxl')
+        tablero_xls = pd.read_excel(reinv,engine='openpyxl')
         comit = tablero['Comitente Número']
         # st.text(comit)
 
         st.dataframe(tablero)
         # st.table(tablero)
     
+        ################################ EXCEL PREPARACION #############################
+        
+        def crearSheet(archivo):
+            archivo = archivo
+
+            sheet = {'Fecha Concertacion':[],
+                      'Fecha Vencimiento':[],
+                      'Cuenta':[],
+                      'Concepto':[],
+                      'Debe':[],
+                      'Haber':[]}
+            # print(archivo)
+            for comit in archivo.index:
+                # print(elem)
+                
+                fecha = datetime.now()
+                fecha = fecha.strftime("%d/%m/%Y")
+
+                sheet['Fecha Concertacion'].append(fecha)         
+                sheet['Fecha Vencimiento'].append(fecha)         
+                sheet['Cuenta'].append(comit)         
+                sheet['Concepto'].append(archivo['Tipo'][comit])         
+                sheet['Debe'].append('0,00')         
+                sheet['Haber'].append(archivo['Importe'][comit]) 
+
+            sheet = pd.DataFrame(sheet)
+            return sheet            
+
+        moneda_7000 = tablero_xls['Moneda'] == 'Dolar Renta Exterior - 7.000' 
+        moneda_10000 = tablero_xls['Moneda'] == 'Dolar Renta Local - 10.000'
+        moneda_8000 = tablero_xls['Moneda'] == 'pesos renta - 8.000'
+        
+        nuevo7000 = tablero_xls[moneda_7000]
+        nuevo10000 = tablero_xls[moneda_10000]
+        nuevo8000 = tablero_xls[moneda_8000]
+
+        reinversion_xls = nuevo7000.append(nuevo10000)
+        reinversion_xls = reinversion_xls.append(nuevo8000)
+      
+        reinversion_xls = reinversion_xls.reindex(columns=['Número','Comitente Descripción','Fecha','Moneda','Comitente Número',
+            'Importe','Tipo','Banco','Tipo de Cuenta','Sucursal','Cuenta','CBU','Tipo de identificador impositivo','Número de identificador impositivo',
+            'Titular','Estado'])
+        # st.dataframe(reinversion_xls)
+
+        sheet_7000 = crearSheet(nuevo7000.set_index('Comitente Número'))
+        sheet_10000 = crearSheet(nuevo10000.set_index('Comitente Número'))
+        sheet_8000 = crearSheet(nuevo8000.set_index('Comitente Número'))
+
+        with ExcelWriter('REINVERSION_FECHA.xlsx') as writer:
+            reinversion_xls.to_excel(writer,sheet_name='Sheet1',index=False)
+            sheet_7000.to_excel(writer,sheet_name='7000',index=False)  
+            sheet_10000.to_excel(writer,sheet_name='10000',index=False)  
+            sheet_8000.to_excel(writer,sheet_name='8000',index=False)  
+        
+        control_file = 'REINVERSION_FECHA.xlsx'
+        with open(control_file, 'rb') as f:
+            s = f.read()
+
+        download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+        st.markdown(download_button_str, unsafe_allow_html=True) 
+
+
+        ################### EXCEL SUBIDA A BO ####################
+
+        ############### ESP 7000 ##################################
+
+        with ExcelWriter('7000_FECHA.xlsx') as writer:
+            sheet_7000.to_excel(writer,sheet_name='7000',index=False) 
+        
+        control_file = '7000_FECHA.xlsx'
+        with open(control_file, 'rb') as f:
+            s = f.read()
+
+        download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+        st.markdown(download_button_str, unsafe_allow_html=True)
+        
+
+        ############### ESP 10000 ##################################
+
+        with ExcelWriter('10000_FECHA.xlsx') as writer:
+            sheet_10000.to_excel(writer,sheet_name='10000',index=False) 
+        
+        control_file = '10000_FECHA.xlsx'
+        with open(control_file, 'rb') as f:
+            s = f.read()
+
+        download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+        st.markdown(download_button_str, unsafe_allow_html=True)
+
+        ############### ESP 8000 ##################################
+        
+        with ExcelWriter('8000_FECHA.xlsx') as writer:
+            sheet_8000.to_excel(writer,sheet_name='8000',index=False) 
+        
+        control_file = '8000_FECHA.xlsx'
+        with open(control_file, 'rb') as f:
+            s = f.read()
+
+        download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+        st.markdown(download_button_str, unsafe_allow_html=True)   
+
+
+
+
+
+
+
+        ################################ EXCEL PREPARACION #############################
      
 
         
