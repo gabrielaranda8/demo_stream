@@ -597,6 +597,7 @@ def main():
         archivo_esco_plus = st.file_uploader("Carga tu xlsx de PLUS de ESCO !!!!!!", type=['xls'])
         archivo_esco_crf = st.file_uploader("Carga tu xlsx de CRF de ESCO !!!!!!", type=['xls'])
         archivo_esco_crfDOL = st.file_uploader("Carga tu xlsx de CRF DOLAR de ESCO !!!!!!", type=['xls'])
+        archivo_esco_crfPYMES = st.file_uploader("Carga tu xlsx de CRF PYMES de ESCO !!!!!!", type=['xls'])
 
 
         def conciliarEsco(archivo_bo,archivo_esco):
@@ -866,6 +867,44 @@ def main():
 
             download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
             st.markdown(download_button_str, unsafe_allow_html=True)           
+
+        if archivo_esco_crfPYMES:
+            
+            ######### Descarto las columnas que no me sirven y dejo limpio el excel ##########
+            archivo_esco_crfPYMES = pd.read_excel(archivo_esco_crfPYMES)
+            archivo_esco_crfPYMES.set_axis(['0', 'Clase', 'Número','Nombre','4','5','Cuotapartes'], 
+                    axis='columns', inplace=True)
+            nuevo = archivo_esco_crfPYMES.drop([0,1,2,3],axis=0)
+            # data.loc[1,2[columna,columna]]
+            
+
+            ########### PRIMERO FILTRAMOS POR LOS PLUS A #######################
+            PYMES_B = nuevo['Clase'] == 'CLASE B'
+            PYMESB = nuevo[PYMES_B].set_index('Número')
+           
+            PYMESbo = archivo_bo['Instrumento - Símbolo'] == 'PYMES'
+            PYMES_BO = archivo_bo[PYMESbo].set_index('Cuenta - Nro') 
+
+            archivo_PYMESA_esco = conciliarEsco(PYMES_BO,PYMESB)
+            archivo_PYMESA_bo = conciliarBO(PYMES_BO,PYMESB)
+            
+           
+            ################ HACEMOS LA CONCI CREANDO UN NUEVO DATAFRAME ##############  
+
+            conci_lista_PYMESB_esco = pd.DataFrame(archivo_PYMESA_esco)
+            conci_lista_PYMESB_bo = pd.DataFrame(archivo_PYMESA_bo)
+
+            with ExcelWriter('CONCI_PYMES_COHEN.xlsx') as writer: 
+                conci_lista_PYMESB_esco.to_excel(writer,sheet_name='PYMESB_ESCO',index=False)  
+                conci_lista_PYMESB_bo.to_excel(writer,sheet_name='PYMESB_BO',index=False)  
+            
+            control_file = 'CONCI_PYMES_COHEN.xlsx'
+            with open(control_file, 'rb') as f:
+                s = f.read()
+
+            download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+            st.markdown(download_button_str, unsafe_allow_html=True)  
+    
                         
 
 if __name__ == '__main__':
