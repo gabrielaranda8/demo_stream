@@ -468,6 +468,7 @@ def main():
         if control_boletos and arancel:
             aranceles = pd.read_excel(arancel, engine='openpyxl')
             control = pd.read_excel(control_boletos, engine='openpyxl', usecols=columnas)
+            control = control.reindex(columns=columnas)
         ################################################################################################################################
 
 
@@ -479,6 +480,7 @@ def main():
             #            "Compra SENEBI Dolar MEP","Venta SENEBI","Venta SENEBI Cable","Venta SENEBI Colega Pesos","Venta Senebi CP Letras","Venta SENEBI Letras Dolar MEP CP",
             #            "Venta Senebi Pesos ON CP"]
             datos = []
+            # print(control)
             for e in control.values:
                 if "SENEBI" in e[0]:
                     if "Compra" in e[0]:
