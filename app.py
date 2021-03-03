@@ -571,10 +571,10 @@ def main():
                 print(e)
 
 
-                if e in coor['Código de Interfaz'].values:
+                if e in coor['Número de Custodia'].values:
                     tipo.append("COORPORATIVO")
 
-                elif e in pymes['Código de Interfaz'].values:
+                elif e in pymes['Número de Custodia'].values:
                     tipo.append("PYMES")
 
                 else:
