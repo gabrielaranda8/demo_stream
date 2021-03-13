@@ -276,6 +276,7 @@ def main():
         
         def crearSheet(archivo):
             archivo = archivo
+            # print(archivo)
 
             sheet = {'Fecha Concertacion':[],
                       'Fecha Vencimiento':[],
@@ -283,27 +284,26 @@ def main():
                       'Concepto':[],
                       'Debe':[],
                       'Haber':[]}
-            # print(archivo)
-            for comit in archivo.index:
-                # print(elem)
+    
+            for num in archivo.index:
+                # print(num)
                 
                 fecha = datetime.now()
                 fecha = fecha.strftime("%d/%m/%Y")
 
                 sheet['Fecha Concertacion'].append(fecha)         
                 sheet['Fecha Vencimiento'].append(fecha)         
-                sheet['Cuenta'].append(comit)         
-                sheet['Concepto'].append(archivo['Tipo'][comit])         
+                sheet['Cuenta'].append(archivo['Comitente Número'][num])         
+                sheet['Concepto'].append(archivo['Tipo'][num])        
                 sheet['Debe'].append('0,00')         
-                sheet['Haber'].append(archivo['Importe'][comit]) 
+                sheet['Haber'].append(archivo['Importe'][num]) 
 
             sheet = pd.DataFrame(sheet)
             return sheet            
 
         moneda_7000 = tablero_xls['Moneda'] == 'Dolar Renta Exterior - 7.000' 
         moneda_10000 = tablero_xls['Moneda'] == 'Dolar Renta Local - 10.000'
-        moneda_8000 = tablero_xls['Moneda'] == 'pesos renta - 8.000'
-        
+        moneda_8000 = tablero_xls['Moneda'] == 'Pesos Renta - 8.000'
         nuevo7000 = tablero_xls[moneda_7000]
         nuevo10000 = tablero_xls[moneda_10000]
         nuevo8000 = tablero_xls[moneda_8000]
@@ -314,11 +314,11 @@ def main():
         reinversion_xls = reinversion_xls.reindex(columns=['Número','Comitente Descripción','Fecha','Moneda','Comitente Número',
             'Importe','Tipo','Banco','Tipo de Cuenta','Sucursal','Cuenta','CBU','Tipo de identificador impositivo','Número de identificador impositivo',
             'Titular','Estado'])
-        # st.dataframe(reinversion_xls)
+        st.dataframe(reinversion_xls)
 
-        sheet_7000 = crearSheet(nuevo7000.set_index('Comitente Número'))
-        sheet_10000 = crearSheet(nuevo10000.set_index('Comitente Número'))
-        sheet_8000 = crearSheet(nuevo8000.set_index('Comitente Número'))
+        sheet_7000 = crearSheet(nuevo7000.set_index('Número'))
+        sheet_10000 = crearSheet(nuevo10000.set_index('Número'))
+        sheet_8000 = crearSheet(nuevo8000.set_index('Número'))
 
         with ExcelWriter('REINVERSION_FECHA.xlsx') as writer:
             reinversion_xls.to_excel(writer,sheet_name='Sheet1',index=False)
