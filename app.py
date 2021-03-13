@@ -314,7 +314,6 @@ def main():
         reinversion_xls = reinversion_xls.reindex(columns=['Número','Comitente Descripción','Fecha','Moneda','Comitente Número',
             'Importe','Tipo','Banco','Tipo de Cuenta','Sucursal','Cuenta','CBU','Tipo de identificador impositivo','Número de identificador impositivo',
             'Titular','Estado'])
-        st.dataframe(reinversion_xls)
 
         sheet_7000 = crearSheet(nuevo7000.set_index('Número'))
         sheet_10000 = crearSheet(nuevo10000.set_index('Número'))
