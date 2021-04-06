@@ -70,6 +70,10 @@ st.sidebar.title("Conci ESCO vs BO")
 bo = st.sidebar.file_uploader("Carga tu xlsx de FONDOS COHEN de BO !!!!", type=['xlsx'])
 st.sidebar.markdown("---")
 
+st.sidebar.title("LIQUIDACIÓN TSA !!!!!!!!!!!!!!!!!!!!")
+liqui_tsa = st.sidebar.file_uploader("Carga tu xlsx de Transferencias TSA de BO !!!!", type=['xlsx'])
+st.sidebar.markdown("---")
+
 def download_button(object_to_download, download_filename, button_text, pickle_it=False):
     """
     Generates a link to download the given object_to_download.
@@ -905,7 +909,193 @@ def main():
 
             download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
             st.markdown(download_button_str, unsafe_allow_html=True)  
-    
+
+    if liqui_tsa:
+        archivo = pd.read_excel(liqui_tsa, engine='openpyxl')
+
+        nuevo_xls = []
+        solo_inmediato = []
+       
+        for linea in archivo.values:
+            
+            comitente = linea[0]
+            codigo = linea[1]
+            tipo = linea[3]
+            cantidad = linea[4]
+            tratamiento = linea[5]
+
+
+            if tipo == 'Venta':
+                for op in archivo.values:
+                    if op[0]==comitente and op[1]==codigo and op[3]=='Compra' and op[4]>=cantidad:
+                        linea[5] = 'Diferido'
+                    elif op[0]==comitente and op[1]==codigo and op[3]=='Compra' and op[4]<cantidad:
+                        diferencia = linea[4] - op[4]
+                        solo_inmediato.append([comitente,codigo,'NADA',tipo,diferencia,tratamiento])
+                        linea[4] = op[4]
+                        linea[5] = 'Diferido'
+
+            nuevo_xls.append(linea)  
+ 
+        columnas = ['Comitente - Número','Instrumento - Código caja','Instrumento - Símbolo','Transferencia - Tipo','Transferencia - Cantidad Total','Transferencia - Tratamiento'] 
+        nuevo_xls = pd.DataFrame(nuevo_xls, columns=columnas)              
+        solo_inmediato = pd.DataFrame(solo_inmediato, columns=columnas)              
+        
+
+        st.dataframe(nuevo_xls)
+        # print(solo_inmediato)
+
+
+        ################################ EXCEL PREPARACION #############################
+     
+
+        
+        lista_tsa= []
+
+        # -----------------PRIMERAS DOS LINEAS OBLIGATORIAS DEL TXT------------------------------------------
+        linea1 = "00Aftfaot    20"+hora+"1130560000000"
+        lista_tsa.append(linea1)      
+
+        incio = "\r\n"+"0"+hora+"FTFAOT0046"+"\r\n"
+        lista_tsa.append(incio)
+
+        # -----------------AGREGAMOS LINEAS SEGUN LA CANTIDAD DE SUCRI QUE TENGAMOS-----------------------------------------
+
+        # especie = 5 digitos 
+        # cuotas = 00000000000.0000000  ( 11 y 7) 
+        # comitente = 9 digitos 
+        especie = 0
+        cuotas = 0
+        comitente = 0
+
+        for valor,comit in enumerate(nuevo_xls['Comitente - Número']):
+            especie = str(nuevo_xls['Instrumento - Código caja'][valor])
+            cuotas = str(nuevo_xls['Transferencia - Cantidad Total'][valor])
+            tipo = str(nuevo_xls['Transferencia - Tratamiento'][valor])
+            lado = str(nuevo_xls['Transferencia - Tipo'][valor])
+            comitente = str(comit)  
+            
+            if tipo=='Diferido' and lado=='Venta':
+
+                ################ AGREGO EL FORMATO A NUESTRO ARCHIVO
+                lista_tsa.append("1'D'E'0046'"+comitente+"'"+especie+"       '"+cuotas+"'7046'10000'N'00'0000'0000'N"+"\r\n")
+            elif tipo=='Inmediato' and lado=='Venta':
+
+                ################ AGREGO EL FORMATO A NUESTRO ARCHIVO
+                lista_tsa.append("1'I'E'0046'"+comitente+"'"+especie+"       '"+cuotas+"'7046'10000'N'00'0000'0000'N"+"\r\n")    
+       
+
+        # LINEA EJEMPLO
+        #"1'I'E'0046'000000003'"+especie+"       '"+cuotas+"'0046'"+comitente+"'N'00'0000'0000'N"
+
+        # ------------------------AGREGAMOS LINEA FINAL---------------------------------------
+
+        # LINEA FINAL
+        num_lineas = len(lista_tsa)-1 # restamos la primera que no cuenta
+        # print(len(str(num_lineas)))
+        if len(str(num_lineas))==1:
+            num_lineas = "0" + str(num_lineas)
+        linea_final = "99Aftfaot    20"+hora+"1130560000000"+str(num_lineas)+"\r\n"
+        lista_tsa.append(linea_final)
+
+        # AGREAGR NUMERO DE FILAS A LA PRIMER LINEA
+        lista_tsa[0] = lista_tsa[0]+str(num_lineas)
+
+        datos=open("modelo_cris_tsa.txt","w")
+        datos.writelines(lista_tsa)
+        datos.close()
+
+
+        nuevo = "modelo_cris_tsa.txt"
+        with open(nuevo, 'rb') as f:
+            s = f.read()
+            print(s)
+
+        download_button_str = download_button(s, nuevo, f'Archivo CRIS TSA {nuevo}')
+        st.markdown(download_button_str, unsafe_allow_html=True)
+
+
+        ################################ TSA EXTRA PREPARACION #############################
+     
+
+        
+        tsa_extra= []
+
+        # -----------------PRIMERAS DOS LINEAS OBLIGATORIAS DEL TXT------------------------------------------
+        linea1_extra = "00Aftfaot    20"+hora+"1130560000000"
+        tsa_extra.append(linea1_extra)      
+
+        incio_extra = "\r\n"+"0"+hora+"FTFAOT0046"+"\r\n"
+        tsa_extra.append(incio_extra)
+
+        # -----------------AGREGAMOS LINEAS SEGUN LA CANTIDAD DE SUCRI QUE TENGAMOS-----------------------------------------
+
+        # especie = 5 digitos 
+        # cuotas = 00000000000.0000000  ( 11 y 7) 
+        # comitente = 9 digitos 
+        especie_extra = 0
+        cuotas_extra = 0
+        comitente_extra = 0
+
+        for valor,comit in enumerate(solo_inmediato['Comitente - Número']):
+            especie_extra = str(solo_inmediato['Instrumento - Código caja'][valor])
+            cuotas_extra = str(solo_inmediato['Transferencia - Cantidad Total'][valor])
+            # tipo = str(solo_inmediato['Transferencia - Tratamiento'][valor])
+            # lado = str(solo_inmediato['Transferencia - Tipo'][valor])
+            comitente_extra = str(comit)  
+            
+            # if tipo=='Diferido' and lado=='Venta':
+
+            #     ################ AGREGO EL FORMATO A NUESTRO ARCHIVO
+            #     tsa_extra.append("1'D'E'0046'"+comitente_extra+"'"+especie_extra+"       '"+cuotas_extra+"'7046'1000'N'00'0000'0000'N"+"\r\n")
+            # elif tipo=='Inmediato' and lado=='Venta':
+
+                ################ AGREGO EL FORMATO A NUESTRO ARCHIVO
+            tsa_extra.append("1'I'E'0046'"+comitente_extra+"'"+especie_extra+"       '"+cuotas_extra+"'7046'10000'N'00'0000'0000'N"+"\r\n")    
+       
+
+        # LINEA EJEMPLO
+        #"1'I'E'0046'000000003'"+especie+"       '"+cuotas+"'0046'"+comitente+"'N'00'0000'0000'N"
+
+        # ------------------------AGREGAMOS LINEA FINAL---------------------------------------
+
+        # LINEA FINAL
+        num_lineas_extra = len(tsa_extra)-1 # restamos la primera que no cuenta
+        # print(len(str(num_lineas_extra)))
+        if len(str(num_lineas_extra))==1:
+            num_lineas_extra = "0" + str(num_lineas_extra)
+        linea_final_extra = "99Aftfaot    20"+hora+"1130560000000"+str(num_lineas_extra)+"\r\n"
+        tsa_extra.append(linea_final_extra)
+
+        # AGREAGR NUMERO DE FILAS A LA PRIMER LINEA
+        tsa_extra[0] = tsa_extra[0]+str(num_lineas_extra)
+
+        datos_extra=open("modelo_extra_tsa.txt","w")
+        datos_extra.writelines(tsa_extra)
+        datos_extra.close()
+
+
+        nuevo_extra = "modelo_extra_tsa.txt"
+        with open(nuevo_extra, 'rb') as f:
+            s = f.read()
+            print(s)
+
+        download_button_str = download_button(s, nuevo_extra, f'Archivo EXTRA TSA {nuevo_extra}')
+        st.markdown(download_button_str, unsafe_allow_html=True)
+
+
+
+
+
+        with ExcelWriter('TSA_OPS.xlsx') as writer:
+                nuevo_xls.to_excel(writer,sheet_name='TSA',index=False)  
+            
+        control_file = 'TSA_OPS.xlsx'
+        with open(control_file, 'rb') as f:
+            s = f.read()
+
+        download_button_str = download_button(s, control_file, f'EXCEL LISTO {control_file}')
+        st.markdown(download_button_str, unsafe_allow_html=True)              
                         
 
 if __name__ == '__main__':
