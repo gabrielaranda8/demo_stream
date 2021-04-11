@@ -692,7 +692,7 @@ def main():
             
 
             ########### PRIMERO FILTRAMOS POR LOS PLUS A #######################
-            plus_a = nuevo['Clase'] == 'CLASE A - PESOS'
+            plus_a = nuevo['Clase'] == 'A - Minorista'
             plusa = nuevo[plus_a].set_index('Número')
            
             plusbo = archivo_bo['Instrumento - Símbolo'] == 'PLUS'
@@ -705,7 +705,7 @@ def main():
             ################ HACEMOS LA CONCI CREANDO UN NUEVO DATAFRAME ##############  
 
             ########### LUEGO FILTRAMOS POR LOS PLUS B #######################
-            plus_B = nuevo['Clase'] == 'CLASE B - PESOS'
+            plus_B = nuevo['Clase'] == 'B - Institucional'
             plusB = nuevo[plus_B].set_index('Número')
 
             plusBbo = archivo_bo['Instrumento - Símbolo'] == 'PLUSB'
@@ -744,7 +744,7 @@ def main():
             
 
             ########### PRIMERO FILTRAMOS POR LOS CRF A #######################
-            crf_a = nuevo['Clase'] == 'CLASE A - PESOS'
+            crf_a = nuevo['Clase'] == 'A - Fisicas'
             crfa = nuevo[crf_a].set_index('Número')
            
             crfbo = archivo_bo['Instrumento - Símbolo'] == 'CRF'
@@ -754,7 +754,7 @@ def main():
             archivo_crfA_bo = conciliarBO(crf_BO,crfa)
 
             ########### LUEGO FILTRAMOS POR LOS CRF B #######################
-            crf_B = nuevo['Clase'] == 'CLASE B - PESOS'
+            crf_B = nuevo['Clase'] == 'B - Fis o Jur'
             CRFB = nuevo[crf_B].set_index('Número')
 
             crfBbo = archivo_bo['Instrumento - Símbolo'] == 'CRFB'
@@ -764,7 +764,7 @@ def main():
             archivo_crfB_bo = conciliarBO(crfB_BO,CRFB)
 
             ########### LUEGO FILTRAMOS POR LOS CRF C #######################
-            crf_C = nuevo['Clase'] == 'CLASE C - PESOS'
+            crf_C = nuevo['Clase'] == 'C - Juridicas'
             CRFC = nuevo[crf_C].set_index('Número')
 
             crfCbo = archivo_bo['Instrumento - Símbolo'] == 'CRFC'
@@ -774,7 +774,7 @@ def main():
             archivo_crfC_bo = conciliarBO(crfC_BO,CRFC)
 
             ########### LUEGO FILTRAMOS POR LOS CRF D #######################
-            crf_D = nuevo['Clase'] == 'CLASE D - PESOS'
+            crf_D = nuevo['Clase'] == 'D - Juridicas'
             CRFD = nuevo[crf_D].set_index('Número')
 
             crfDbo = archivo_bo['Instrumento - Símbolo'] == 'CRFD'
@@ -821,7 +821,7 @@ def main():
             
 
             ########### PRIMERO FILTRAMOS POR LOS CRF DOL A #######################
-            crf_DOLa = nuevo['Clase'] == 'CLASE A - DOLARES MEP'
+            crf_DOLa = nuevo['Clase'] == 'A - Fis'
             crfDOLa = nuevo[crf_DOLa].set_index('Número')
            
             crfDOLAbo = archivo_bo['Instrumento - Símbolo'] == 'CRF DOL'
@@ -831,7 +831,7 @@ def main():
             archivo_crfDOLA_bo = conciliarBO(crf_DOLABO,crfDOLa)
 
             ########### LUEGO FILTRAMOS POR LOS CRF DOL B #######################
-            crf_DOLB = nuevo['Clase'] == 'CLASE B - DOLARES MEP'
+            crf_DOLB = nuevo['Clase'] == 'B - Jur'
             CRFDOLB = nuevo[crf_DOLB].set_index('Número')
 
             crfDOLBbo = archivo_bo['Instrumento - Símbolo'] == 'CRF DOL B'
@@ -841,7 +841,7 @@ def main():
             archivo_crfDOLB_bo = conciliarBO(crfDOLB_BO,CRFDOLB)
 
             ########### LUEGO FILTRAMOS POR LOS CRF DOL I #######################
-            crf_DOLI = nuevo['Clase'] == 'CLASE I - DOLARES DIVISAS'
+            crf_DOLI = nuevo['Clase'] == 'I'
             CRFDOLI = nuevo[crf_DOLI].set_index('Número')
 
             crfDOLIbo = archivo_bo['Instrumento - Símbolo'] == 'CRF DOL I'
@@ -883,8 +883,8 @@ def main():
             # data.loc[1,2[columna,columna]]
             
 
-            ########### PRIMERO FILTRAMOS POR LOS PLUS A #######################
-            PYMES_B = nuevo['Clase'] == 'CLASE B'
+            ########### PRIMERO FILTRAMOS POR LOS PYMES #######################
+            PYMES_B = nuevo['Clase'] == 'B - Institucional'
             PYMESB = nuevo[PYMES_B].set_index('Número')
            
             PYMESbo = archivo_bo['Instrumento - Símbolo'] == 'PYMES'
