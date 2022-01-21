@@ -287,7 +287,10 @@ def main():
                       'Cuenta':[],
                       'Concepto':[],
                       'Debe':[],
-                      'Haber':[]}
+                      'Haber':[],
+                      'Contraparte - Custodia':[],
+                      'Contraparte - Depositante':[],
+                      'Contraparte - Cuenta':[]}
     
             for num in archivo.index:
                 # print(num)
@@ -300,7 +303,10 @@ def main():
                 sheet['Cuenta'].append(archivo['Comitente Número'][num])         
                 sheet['Concepto'].append(archivo['Tipo'][num])        
                 sheet['Debe'].append('0,00')         
-                sheet['Haber'].append(archivo['Importe'][num]) 
+                sheet['Haber'].append(archivo['Importe'][num])
+                sheet['Contraparte - Custodia'].append('CAJAVAL')
+                sheet['Contraparte - Depositante'].append('0046')
+                sheet['Contraparte - Cuenta'].append(archivo['Comitente Número'][num])
 
             sheet = pd.DataFrame(sheet)
             return sheet            
