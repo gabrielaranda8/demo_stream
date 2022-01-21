@@ -1,4 +1,6 @@
 #    streamlit run app_name.py --server.port 5998
+#    git remote add heroku https://github.com/gabrielaranda8/demo_stream.git
+
 from enum import Enum
 from io import BytesIO, StringIO
 from typing import Union
